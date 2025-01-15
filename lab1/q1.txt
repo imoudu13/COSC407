@@ -1,0 +1,26 @@
+#include <stdio.h>
+
+int main() {
+    int nums[4];
+    printf("Enter 4 integers seperated by spaces: ");
+    scanf("%d %d %d %d", &nums[0], &nums[1], &nums[2], &nums[3]);
+
+    float avg = (nums[0] + nums[1] + nums[2] + nums[3]) / 4;
+
+    int count = 0;
+
+    for ( int i = 0; i < 4; i++) {
+        if (nums[i] > avg) {
+            count++;
+        }
+    }
+
+    if (count > 1) {
+        printf("There are %d entries above the average (%f)", count, avg);
+        return 0;
+    }
+
+    printf("There is %d entry above the average (%f)", count, avg);
+
+    return 0;
+}
