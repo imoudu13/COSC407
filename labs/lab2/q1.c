@@ -8,20 +8,20 @@ int main() {
 
     int *A = calloc(FIFTY_MILLION, sizeof(int));
     if (A == NULL) {
-        fprintf(stderr, "Memory allocation failed for A\n");
+        printf("Memory allocation failed for A\n");
         return 1;
     }
 
     int *B = calloc(FIFTY_MILLION, sizeof(int));
     if (B == NULL) {
-        fprintf(stderr, "Memory allocation failed for B\n");
-        free(A); // Clean up previously allocated memory
+        printf("Memory allocation failed for B\n");
+        free(A);
         return 1;
     }
 
     int *C = calloc(FIFTY_MILLION, sizeof(int));
     if (C == NULL) {
-        fprintf(stderr, "Memory allocation failed for C\n");
+        printf("Memory allocation failed for C\n");
         free(A);
         free(B);
         return 1;
