@@ -19,7 +19,7 @@ int main() {
 
     start = clock();
 
-    getC(ONE_MILLION_A, ONE_MILLION_B, ONE_MILLION);
+    getC(ONE_MILLION_A, ONE_MILLION_B, ONE_MILLION); // 0.011160 seconds
 
     end = clock();
 
@@ -37,7 +37,7 @@ int main() {
     
     start = clock();
 
-    getC(TEN_MILLION_A, TEN_MILLION_B, ONE_MILLION);
+    getC(TEN_MILLION_A, TEN_MILLION_B, ONE_MILLION); // 0.006838 seconds
 
     end = clock();
 
@@ -49,7 +49,7 @@ int main() {
 
     start = clock();
 
-    getC(FIFTY_MILLION_A, FIFTY_MILLION_B, FIFTY_MILLION);
+    getC(FIFTY_MILLION_A, FIFTY_MILLION_B, FIFTY_MILLION); // 0.165608 seconds
 
     end = clock();
 
@@ -65,7 +65,7 @@ int main() {
 
     start = clock();
 
-    getC(TWO_HUNDRED_MILLION_A, TWO_HUNDRED_MILLION_B, TWO_HUNDRED_MILLION);
+    getC(TWO_HUNDRED_MILLION_A, TWO_HUNDRED_MILLION_B, TWO_HUNDRED_MILLION); // 0.624498 seconds
 
     end = clock();
 
@@ -78,9 +78,24 @@ int main() {
 }
 
 void getC(int* A, int* B, const int SIZE) {
+    if (A == NULL) {
+        fprintf(stderr, "Memory allocation failed for A\n");
+        return;
+    }
+
+    if (B == NULL) {
+        fprintf(stderr, "Memory allocation failed for B\n");
+        return;
+    }
+
     printf("Starting computation for size: %d\n", SIZE);
 
     int* C = (int*) malloc(SIZE * sizeof(int));
+
+    if (C == NULL) {
+        fprintf(stderr, "Memory allocation failed for C\n");
+        return;
+    }
 
     int sum = 0;
 
