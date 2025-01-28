@@ -3,14 +3,13 @@
 #include <omp.h>
 #include <time.h>
 
+#define MILLION 1000000
 int* vecCreate(int size);
 int* vecCreateOpenMP(int size, int num_thread);
 
 int main() {
-    const int SIZE = 50000000; // 50 million elements
-    int num_threads = 4;
+    const int SIZE = 50 * MILLION;
 
-    // sequential implementation
     clock_t start_seq = clock();
     int* sequential = vecCreate(SIZE);
     clock_t end_seq = clock();
@@ -18,9 +17,11 @@ int main() {
     if (sequential != NULL) {
         printf("Sequential: Last element: %d\n", sequential[SIZE - 1]);
         double time_taken = (double)(end_seq - start_seq) / CLOCKS_PER_SEC;
-        printf("Sequential: Time taken: %.2f seconds\n", time_taken);
+        printf("Sequential: Time taken: %.2f seconds\n\n", time_taken);
         free(sequential);
     }
+
+    int num_threads = 4;
 
     clock_t start_par = omp_get_wtime();
     int* parallel = vecCreateOpenMP(SIZE, num_threads);
@@ -52,6 +53,7 @@ int* vecCreate(const int SIZE) {
 }
 
 int* vecCreateOpenMP(const int SIZE, int thread_count) {
+    printf("Using OpenMP with 3 threads: \n");
     if (SIZE % thread_count != 0) {
         printf("Error: Vector size must be divisible by the number of threads.\n");
         return NULL;
@@ -78,3 +80,14 @@ int* vecCreateOpenMP(const int SIZE, int thread_count) {
     
     return A;
 }
+
+/*
+Sequential: Last element: 49999999
+Sequential: Time taken: 0.16 seconds
+Parallel: Last element: 49999999
+Parallel: Time taken: 0.00 seconds
+
+Sequential: Last element: 49999999
+Sequential: Time taken: 0.15 seconds
+Error: Vector size must be divisible by the number of threads.
+*/

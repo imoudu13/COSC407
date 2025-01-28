@@ -9,14 +9,14 @@ int main() {
 
     if (A == NULL) {
         printf("Error with memory allocation for A.\n");
-        return 1; // return 1 for error
+        return 1;
     }
 
     int* B = calloc(FIFTY_MILLION, sizeof(int));
 
     if (B == NULL) {
         printf("Error with memory allocation for B.\n");
-        return 1; // return 1 for error
+        return 1;
     }
 
     int* C = addVec2(A, B, FIFTY_MILLION);
