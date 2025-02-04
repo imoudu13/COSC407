@@ -1,62 +1,61 @@
-/**************************************************************
-
- The program reads a BMP image file and creates a new
- image that is the negative or desaturated of the input file.
-
- **************************************************************/
-
 #include "qdbmp.h"
 #include <stdio.h>
 #include <omp.h>
 
-typedef enum {desaturate, negative} ImgProcessing ;
+typedef enum {desaturate, negative} ImgProcessing;
 
-/* Creates a negative image of the input bitmap file */
+/* Creates a negative or desaturated image of the input bitmap file */
 int main() {
-	const char* inFile = "okanagan.bmp";
-	const char* outFile = "okanagan_processed.bmp";
-	const ImgProcessing processingType = desaturate; //or negative
+    const char* inFile = "okanagan.bmp";
+    const char* outFile = "okanagan_processed.bmp";
+    const ImgProcessing processingType = desaturate; // or negative
 
-	UCHAR r, g, b;
-	UINT width, height;
-	UINT x, y;
-	BMP* bmp;
+    UCHAR r, g, b;
+    UINT width, height;
+    BMP* bmp;
 
-	/* Read an image file */
-	bmp = BMP_ReadFile(inFile);
-	BMP_CHECK_ERROR(stdout, -1);
+    /* Read an image file */
+    bmp = BMP_ReadFile(inFile);
+    BMP_CHECK_ERROR(stdout, -1);
 
-	/* Get image's dimensions */
-	width = BMP_GetWidth(bmp);
-	height = BMP_GetHeight(bmp);
+    /* Get image's dimensions */
+    width = BMP_GetWidth(bmp);
+    height = BMP_GetHeight(bmp);
 
-	double t = omp_get_wtime();
-	
-	/* Iterate through all the image's pixels */
-	for (x = 0; x < width; ++x) {
-		for (y = 0; y < height; ++y) {
-			/* Get pixel's RGB values */
-			BMP_GetPixelRGB(bmp, x, y, &r, &g, &b);
+    double t = omp_get_wtime();
 
-			/* Write new RGB values */
-			if(processingType == negative)
-				BMP_SetPixelRGB(bmp, x, y, 255 - r, 255 - g, 255 - b);
-			else if(processingType == desaturate){
-				UCHAR gray = r * 0.3 + g * 0.59 + b * 0.11;
-				BMP_SetPixelRGB(bmp, x, y, gray, gray, gray);
-			}
-		}
-	}
-	/* calculate and print processing time*/
-	t = 1000 * (omp_get_wtime() - t);
-	printf("Finished image processing in %.1f ms.", t);
+    /* Parallel region */
+    #pragma omp parallel
+    {
+        int num_threads = omp_get_num_threads();
+        int thread_id = omp_get_thread_num();
 
-	/* Save result */
-	BMP_WriteFile(bmp, outFile);
-	BMP_CHECK_ERROR(stdout, -2);
+		printf("number of threads: %d\n", thread_id);
+        /* Manually divide work */
+        for (UINT x = thread_id; x < width; x += num_threads) {
+            for (UINT y = 0; y < height; ++y) {
+                BMP_GetPixelRGB(bmp, x, y, &r, &g, &b);
 
-	/* Free all memory allocated for the image */
-	BMP_Free(bmp);
+                if (processingType == negative) {
+                    BMP_SetPixelRGB(bmp, x, y, 255 - r, 255 - g, 255 - b);
+                } else if (processingType == desaturate) {
+                    UCHAR gray = r * 0.3 + g * 0.59 + b * 0.11;
+                    BMP_SetPixelRGB(bmp, x, y, gray, gray, gray);
+                }
+            }
+        }
+    }
 
-	return 0;
+    /* Calculate and print processing time */
+    t = 1000 * (omp_get_wtime() - t);
+    printf("Finished image processing in %.1f ms.\n", t);
+
+    /* Save result */
+    BMP_WriteFile(bmp, outFile);
+    BMP_CHECK_ERROR(stdout, -2);
+
+    /* Free all memory allocated for the image */
+    BMP_Free(bmp);
+
+    return 0;
 }
