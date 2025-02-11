@@ -1,3 +1,4 @@
+
 # Parallel Concepts
 
 ## Concurrency
@@ -396,4 +397,346 @@ int main() {
 **Further Reading:**
 - [OpenMP Documentation](https://www.openmp.org/specifications)
 - OpenMP Resources in Course Materials
+
+# 7 - OpenMP Variable Scope and Reductions
+
+## Overview
+OpenMP provides mechanisms for controlling **variable scope** and efficient **reduction operations** to aggregate data across threads.
+
+### Key Topics:
+- Variable Scope in OpenMP
+- Shared, Private, and Firstprivate Variables
+- Reduction Operations
+
+---
+
+## Variable Scope
+In OpenMP, variable scope determines which **threads** can access a variable inside a parallel block.
+
+### Shared Variables
+- Exist in **one memory location**, accessible by all threads.
+- Default behavior for variables declared **before** the parallel block.
+
+```c
+int x = 5;
+#pragma omp parallel
+{
+    // All threads access the same x
+}
+```
+
+### Private Variables
+- Each thread gets **its own copy** of the variable.
+- Uninitialized unless explicitly set.
+
+```c
+int y = 5;
+#pragma omp parallel private(y)
+{
+    // Each thread gets its own y (uninitialized)
+}
+```
+
+### Firstprivate Variables
+- Like `private`, but **initialized** with the original value.
+
+```c
+int z = 5;
+#pragma omp parallel firstprivate(z)
+{
+    // Each thread gets its own z, initialized to 5
+}
+```
+
+### Default Clause
+Sets the default scope for all variables.
+
+```c
+int x = 0, y = 0;
+#pragma omp parallel num_threads(4) default(none) private(x) shared(y)
+{
+    x = omp_get_thread_num();
+    #pragma omp atomic
+    y += x;
+}
+```
+
+---
+
+## Reductions
+**Reduction** operations allow threads to **aggregate results** safely without manual synchronization.
+
+### Syntax
+```c
+#pragma omp parallel reduction(<operator> : <variable list>)
+```
+
+### Example 1: Summing Across Threads
+```c
+int sum = 0;
+#pragma omp parallel reduction(+:sum)
+{
+    sum += omp_get_thread_num();
+}
+printf("Total sum = %d", sum);
+```
+
+### Example 2: Multiple Variables
+```c
+int x = 10, y = 10;
+#pragma omp parallel reduction(+:x, y)
+{
+    x = omp_get_thread_num();
+    y = 5;
+}
+printf("Shared: x=%d, y=%d\n", x, y);
+```
+
+### Reduction Operations
+| Operator | Description |
+|----------|-------------|
+| `+` | Summation |
+| `*` | Multiplication |
+| `&` | Bitwise AND |
+| `|` | Bitwise OR |
+| `^` | Bitwise XOR |
+| `&&` | Logical AND |
+| `||` | Logical OR |
+
+---
+
+## Parallel Summation with Reduction
+Instead of using a **critical section**, reductions optimize aggregation.
+
+```c
+double global_sum = 0;
+#pragma omp parallel num_threads(4) reduction(+:global_sum)
+{
+    global_sum += compute_value(omp_get_thread_num());
+}
+```
+
+---
+
+## Area Under a Curve (Trapezoidal Rule)
+Using **reduction** to integrate a function:
+
+```c
+double global_result = 0.0;
+#pragma omp parallel num_threads(4) reduction(+:global_result)
+{
+    global_result += Local_trap(a, b, n);
+}
+printf("Approximate area: %f\n", global_result);
+```
+
+---
+
+# 8 - Work Sharing (Parallel For, Single)
+
+## **1. Work-Sharing Constructs**
+- Used to distribute work among threads inside a parallel region.
+- **Types:**
+  - `for` – Divides loop iterations across threads.
+  - `single` – Assigns work to a single thread.
+  - `sections` – Splits tasks into sections executed by different threads.
+- There is an **implied barrier** at the exit unless `nowait` is specified.
+
+## **2. Parallel For**
+- Loop iterations are divided across threads dynamically.
+- The loop variable is **private** by default.
+- The execution order is **non-deterministic**.
+
+### **Syntax Options:**
+1. **Inside an existing parallel region:**
+   ```c
+   #pragma omp for
+   for(i = start; i < end; i += step) {
+       // Loop body
+   }
+   ```
+
+2. **Creating a parallel region just for the loop:**
+   ```c
+   #pragma omp parallel for
+   for(i = start; i < end; i += step) {
+       // Loop body
+   }
+   ```
+
+### **Example Without OpenMP Parallelization**
+```c
+#pragma omp parallel num_threads(4)
+{
+    int i, n = omp_get_thread_num();
+    for(i=0; i<4; i++)
+        printf("T%d: i=%d\n", n , i);
+}
+```
+*Each thread executes the whole loop, leading to redundant iterations.*
+
+### **Example With OpenMP Parallel For**
+```c
+#pragma omp parallel
+{
+    int i, n;
+    #pragma omp for
+    for (i = 0; i < 4; i++) {
+        n = omp_get_thread_num();
+        printf("T%d: i=%d\n", n, i);
+    }
+}
+```
+*Iterations are divided among the threads, reducing redundancy.*
+
+---
+
+## **3. Data Dependency & Loop-Carried Dependencies**
+- Parallel loops should avoid **loop-carried dependencies** (when one iteration depends on results from another).
+- **Example of incorrect parallelization:**
+  ```c
+  fibo[0] = fibo[1] = 1;
+  #pragma omp parallel for
+  for (i = 2; i < n; i++)
+      fibo[i] = fibo[i-1] + fibo[i-2];
+  ```
+  *This will produce incorrect results because `fibo[i-1]` and `fibo[i-2]` might not be computed yet.*
+
+---
+
+## **4. Reduction in Parallel Loops**
+- Reduction avoids data races when accumulating results.
+- **Example: Summing values in an array**
+  ```c
+  double sum = 0.0;
+  #pragma omp parallel for reduction(+:sum)
+  for (i = 0; i < n; i++)
+      sum += array[i];
+  ```
+
+---
+
+## **5. Assigning Work to a Single Thread**
+- Use `#pragma omp single` for operations that should only be done once.
+- **Example:**
+  ```c
+  #pragma omp parallel
+  {
+      printf("Hi from T%d\n", omp_get_thread_num());
+      #pragma omp single
+      printf("One Hi from T%d\n", omp_get_thread_num());
+  }
+  ```
+  *Only one thread will execute the `single` block.*
+
+---
+
+# 9 - Work Sharing (Sections, Scheduling, Ordered Iterations)
+
+## **1. Parallel Sections**
+- `#pragma omp sections` allows different sections of code to be executed by different threads.
+- **Example:**
+  ```c
+  #pragma omp parallel sections
+  {
+      #pragma omp section
+      {
+          printf("Section 1 executed by thread %d\n", omp_get_thread_num());
+      }
+      #pragma omp section
+      {
+          printf("Section 2 executed by thread %d\n", omp_get_thread_num());
+      }
+  }
+  ```
+- There is an **implicit barrier** at the end of the sections unless `nowait` is used.
+
+---
+
+## **2. Loop Scheduling**
+- The `schedule` clause determines how loop iterations are assigned to threads.
+
+| **Scheduling Type** | **Description** |
+|---------------------|----------------|
+| `static` | Equal chunks assigned at compile time. |
+| `dynamic` | Threads take chunks dynamically. |
+| `guided` | Starts with large chunks, then reduces. |
+| `auto` | Compiler decides the best method. |
+
+- **Example using dynamic scheduling:**
+  ```c
+  #pragma omp parallel for schedule(dynamic,2)
+  for(int i = 0; i<8; i++)
+      printf("T%d: %d\n", omp_get_thread_num(), i);
+  ```
+
+---
+
+## **3. Ordered Iterations**
+- Ensures that iterations follow a strict order when needed.
+- **Example:**
+  ```c
+  #pragma omp for ordered schedule(dynamic)
+  for(int i=0; i<100; i++) {
+      f(a[i]); // Can run in parallel
+      #pragma omp ordered
+      g(a[i]); // Runs in order
+  }
+  ```
+
+---
+
+# 10 - OpenMP Examples, Functions, SIMD
+
+## **1. Parallel Matrix Multiplication**
+```c
+#pragma omp parallel for collapse(2)
+for (i = 0; i < N; i++)
+    for (j = 0; j < N; j++) {
+        C[i][j] = 0;
+        for (k = 0; k < N; k++)
+            C[i][j] += A[i][k] * B[k][j];
+    }
+```
+
+## **2. Finding the Maximum Value**
+```c
+int max_parallel(int *arr){
+    int i, m = arr[0];
+    #pragma omp parallel for reduction(max:m)
+    for (i = 0; i < N; i++)
+        if (m < arr[i])
+            m = arr[i];
+    return m;
+}
+```
+
+## **3. Producer-Consumer Model**
+```c
+void produce() {
+    while (i < NUM_ITEMS) {
+        #pragma omp critical(one)
+        if (!full) {
+            put(item);
+            i++;
+        }
+    }
+}
+
+void consume() {
+    while (j < NUM_ITEMS) {
+        #pragma omp critical(two)
+        if (!empty) {
+            get();
+            j++;
+        }
+    }
+}
+```
+*Ensures only one thread modifies shared data at a time.*
+
+---
+
+This document summarizes **OpenMP Work Sharing**, including `parallel for`, `sections`, `scheduling`, and `SIMD`. Each section includes syntax, examples, and best practices.
+
 

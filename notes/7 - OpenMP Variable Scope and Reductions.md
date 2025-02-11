@@ -138,11 +138,3 @@ printf("Approximate area: %f\n", global_result);
 - **Firstprivate** ensures **initialized copies** for each thread.
 - **Reduction** simplifies aggregating results across threads.
 
-### Next Steps:
-- Learn about **Work Sharing**.
-- Optimize parallel programs using **OpenMP scheduling**.
-
-**Further Reading:**
-- [OpenMP Documentation](https://www.openmp.org/specifications)
-- OpenMP Course Materials
-
