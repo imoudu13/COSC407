@@ -22,28 +22,6 @@ OpenMP (Open Multi-Processing) is an API for multi-threaded, shared-memory paral
 
 ---
 
-## Compiling and Running OpenMP Programs
-### Command Line:
-```sh
-gcc -g -Wall -fopenmp -o omp_hello omp_hello.c
-./omp_hello
-```
-
-### Example Output:
-```sh
-Hello from thread 0 of 4
-Hello from thread 1 of 4
-Hello from thread 2 of 4
-Hello from thread 3 of 4
-```
-
-### Running with Eclipse:
-1. Install MinGW and configure Eclipse.
-2. Create a new **OpenMP Empty C Project**.
-3. Create a source file and compile using built-in tools.
-
----
-
 ## OpenMP API Components
 OpenMP consists of three main components:
 1. **Compiler directives** (`#pragma omp ...`)
