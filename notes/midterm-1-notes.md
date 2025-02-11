@@ -238,15 +238,6 @@ return 0;
 
 # 6 - OpenMP Mutexes, Exclusions, and Synchronization
 
-## Overview
-OpenMP provides mechanisms for **synchronization and mutual exclusion** to prevent **race conditions** and ensure **safe parallel execution**.
-
-### Key Topics:
-- Race Conditions
-- Barriers
-- Mutual Exclusion (Critical Sections, Atomics, and Locks)
-- Performance Considerations
-
 ---
 
 ## Race Conditions
@@ -384,29 +375,7 @@ int main() {
 
 ---
 
-## Conclusion
-- **Barriers ensure synchronization** among threads.
-- **Critical sections and atomics prevent race conditions**.
-- **Locks provide explicit control** over execution.
-- **Performance trade-offs exist between mechanisms**.
-
-### Next Steps:
-- Learn about **variable scopes (shared, private, firstprivate)**.
-- Explore **Reduction and Work Sharing**.
-
-**Further Reading:**
-- [OpenMP Documentation](https://www.openmp.org/specifications)
-- OpenMP Resources in Course Materials
-
 # 7 - OpenMP Variable Scope and Reductions
-
-## Overview
-OpenMP provides mechanisms for controlling **variable scope** and efficient **reduction operations** to aggregate data across threads.
-
-### Key Topics:
-- Variable Scope in OpenMP
-- Shared, Private, and Firstprivate Variables
-- Reduction Operations
 
 ---
 
@@ -734,9 +703,3 @@ void consume() {
 }
 ```
 *Ensures only one thread modifies shared data at a time.*
-
----
-
-This document summarizes **OpenMP Work Sharing**, including `parallel for`, `sections`, `scheduling`, and `SIMD`. Each section includes syntax, examples, and best practices.
-
-
