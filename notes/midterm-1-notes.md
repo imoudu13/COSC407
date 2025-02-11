@@ -99,7 +99,7 @@ For deadlock to occur, **four conditions must hold**:
 ### Preventing Deadlock
 To prevent deadlock, **prevent at least one of the four conditions** from occurring.
 
-## POSIX Threads
+# POSIX Threads
 A **POSIX thread** is a thread associated with a process’s shared resources. Each thread has its own:
 - **Stack**
 - **Program counter**
@@ -109,7 +109,7 @@ A **POSIX thread** is a thread associated with a process’s shared resources. E
 ## Races
 A **race condition** occurs when the **parent process exits before its child threads complete**. This does not allow enough time for child threads to finish execution.
 
-### Fixes for Race Conditions
+## Fixes for Race Conditions
 - Best fix for race conditions, use mutual exclusions and join the threads
 
 ```
@@ -163,4 +163,74 @@ void* say_something(void *ptr) {
     pthread_mutex_unlock(&lock);
     pthread_exit(0);
 }
+```
+
+# Intro to OpenMP
+OpenMP = open Multi-Processing
+
+An api for multithreaded shared parallel programming
+
+OpenMP is: 
+- higher level than Pthreads
+- programmer only states that a block of code is to be executed in parallel
+- requires compiler support
+
+
+### Task Parallelisms
+- Share the tasks among each core ie on core does the tasks on all data
+### Data parallelism
+- Share the data among each core
+
+## OpenMP API
+OpenMP is based on directives
+
+### OpenMP API components
+- Compiler directive
+- Runtime library routines
+- Environment variables
+
+## Fork Join
+OpenMP uses the fork join model. The enforces synchronization so every thread must wait till everyone is finished <br>
+before proceeding to the next region
+A group of threads executing the parallel block is known as a team, the original thread is called the master, <br>
+the children are called slaves
+
+### Task parallelism
+```c
+#pragma omp parallel num_threads(4)
+{ 
+  int id = omp_get_thread_num();
+  printf("T%d:A\n", id);
+  printf("T%d:B\n", id);
+  
+  if (id == 0)
+    printf("T0:special task\n");
+    
+  if (id == 1)
+    printf("T1:special task\n");
+    
+  if(id == 2)
+    printf("T2:special task\n");
+}
+
+printf("End");
+```
+
+### Data Parallelism
+```C
+#pragma omp parallel num_threads(2)
+{
+  int id = get_thread_num()
+  int my_a = id * 3;  \\ where you want the thread to start doing work
+  int my_b = id * 3 + 3; \\ where it should stop doing work
+  
+  printf("T%d will process indexes %d to ");
+  
+  for (int index = my_a; index < my_b; index++) 
+    printf("do work\n");
+}
+
+printf("done\n");
+
+return 0;
 ```
