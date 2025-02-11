@@ -703,3 +703,192 @@ void consume() {
 }
 ```
 *Ensures only one thread modifies shared data at a time.*
+<<<<<<< HEAD
+=======
+
+```markdown
+# Parallel Computing Practice Midterm - Long Answer Solutions
+
+## **Question 1: Parallelizing Nested Loops**
+### **Given Code:**
+```c
+for (i = 0; i < N; i++)  
+    for (j = 0; j < N; j++)  
+        A[i][j] = max(A[i][j], B[i][j]);  
+```
+
+### **(a) Parallelizing the Code**
+Using OpenMP, we can parallelize the outer loop to allow multiple threads to work on different rows concurrently.
+
+```c
+#pragma omp parallel for private(j)
+for (i = 0; i < N; i++)  
+    for (j = 0; j < N; j++)  
+        A[i][j] = max(A[i][j], B[i][j]);  
+```
+- The `#pragma omp parallel for` ensures each thread handles a different value of `i`.
+- `private(j)` ensures each thread has its own copy of `j`.
+
+### **(b) Choosing the Best Schedule**
+- `static` scheduling: Assigns equal chunks of rows to threads. Good if workload is uniform.
+- `dynamic` scheduling: Threads request new rows when they finish processing assigned rows. Best for non-uniform workloads.
+- `guided` scheduling: Similar to `dynamic`, but chunk sizes decrease over time.
+
+For this case, **static scheduling** is the most efficient since each iteration has equal workload.
+
+```c
+#pragma omp parallel for schedule(static) private(j)
+for (i = 0; i < N; i++)  
+    for (j = 0; j < N; j++)  
+        A[i][j] = max(A[i][j], B[i][j]);  
+```
+
+---
+
+## **Question 2: Difference Between Parallel Structures**
+### **Code Snippets & Explanation**
+#### **(a) `#pragma omp master`**
+```c
+#pragma omp parallel {
+    int n = omp_get_thread_num();  
+    printf("T%d:A\n", n);  
+    #pragma omp master
+    printf("T%d:X\n", n);  
+    printf("T%d:B\n", n);  
+}  
+printf("Finished");
+```
+- `#pragma omp master`: Only **one thread (master)** executes `printf("T%d:X\n", n);`.
+- All threads execute `printf("T%d:A\n", n);` and `printf("T%d:B\n", n);`.
+
+#### **(b) `#pragma omp single`**
+```c
+#pragma omp parallel {
+    int n = omp_get_thread_num();  
+    printf("T%d:A\n", n);  
+    #pragma omp single
+    printf("T%d:X\n", n);  
+    printf("T%d:B\n", n);  
+}  
+printf("Finished");
+```
+- `#pragma omp single`: **Only one thread executes `printf("T%d:X\n", n);`**, but it can be any thread, not necessarily the master thread.
+
+#### **(c) Explicit Check for Thread 0**
+```c
+#pragma omp parallel {
+    int n = omp_get_thread_num();  
+    printf("T%d:A\n", n);  
+    if(omp_get_thread_num() == 0)
+        printf("T%d:X\n", n);  
+    printf("T%d:B\n", n);
+}
+printf("Finished");
+```
+- This explicitly checks if the thread number is `0`, similar to `master`, but allows more flexibility.
+
+**Summary of Differences:**
+- `master`: Only the master thread executes the block.
+- `single`: A single (but arbitrary) thread executes the block.
+- Explicit check: A thread with a specific ID executes the block.
+
+---
+
+## **Question 3: Parallelizing Loops with Dependencies**
+### **(a) Serial Code:**
+```c
+C[0] = 1;
+for (i = 1; i < N; i++) {
+    C[i] = C[i - 1];
+    for (j = 0; j < N; j++) {
+        C[i] *= A[i][j] + B[i][j];
+    }
+}
+```
+### **Parallelized Version:**
+- The loop **depends on `C[i-1]`**, so it **cannot** be fully parallelized.
+- However, the inner loop can be parallelized:
+
+```c
+C[0] = 1;
+for (i = 1; i < N; i++) {
+    C[i] = C[i - 1];
+    #pragma omp parallel for
+    for (j = 0; j < N; j++) {
+        C[i] *= A[i][j] + B[i][j];
+    }
+}
+```
+---
+
+## **Question 5: Parallelizing Floyd-Warshall Algorithm**
+### **Given Code:**
+```c
+for (k = 0; k < n; k++)
+    for (i = 0; i < n; i++)
+        for (j = 0; j < n; j++)
+            if ( (d[i][k] + d[k][j]) < d[i][j] )  
+                d[i][j] = d[i][k] + d[k][j];
+```
+### **Parallelizing It:**
+Since `d[i][j]` depends on previous iterations of `k`, only the **inner two loops** can be parallelized:
+
+```c
+for (k = 0; k < n; k++) {
+    #pragma omp parallel for collapse(2)
+    for (i = 0; i < n; i++)
+        for (j = 0; j < n; j++)
+            if ((d[i][k] + d[k][j]) < d[i][j])
+                d[i][j] = d[i][k] + d[k][j];
+}
+```
+- `collapse(2)`: Merges the two loops so that OpenMP distributes **both** `i` and `j` iterations among threads.
+
+---
+
+## **Question 6: Explicit OpenMP Parallelization**
+### **Given OpenMP Code:**
+```c
+void vector_add(double *a, double *b, double *sum, int n) {
+    int i;
+    #pragma omp parallel for
+    for (i = 0; i < n; i++)
+        sum[i] = a[i] + b[i];
+}
+```
+### **Manually Managing Threads**
+Instead of `#pragma omp`, we create threads explicitly:
+
+```c
+void vector_add(double *a, double *b, double *sum, int n) {
+    int TID, TOT;
+    #pragma omp parallel private(TID)
+    {
+        TID = omp_get_thread_num();
+        TOT = omp_get_num_threads();
+        int range = n / TOT;
+        int start = TID * range;
+        int end = start + range;
+
+        for (int i = start; i < end; i++) {
+            sum[i] = a[i] + b[i];
+        }
+    }
+}
+```
+- `omp_get_thread_num()`: Each thread gets its unique ID.
+- `omp_get_num_threads()`: Gets the total number of threads.
+- `range = n / TOT`: Each thread processes an equal chunk.
+
+---
+
+## **Conclusion**
+These solutions demonstrate efficient parallelization strategies using OpenMP. Key techniques include:
+- Loop parallelization using `#pragma omp parallel for`
+- Managing dependencies in sequential loops
+- Using scheduling techniques (`static`, `dynamic`, `guided`)
+- Handling thread synchronization with `master`, `single`, and explicit checks.
+```
+```
+
+>>>>>>> 656abccd36f320d12592b5b9c1331e4850a51bb7
