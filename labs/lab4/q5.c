@@ -64,10 +64,25 @@ int main() {
     count_sort_parallel(a_parallel, N);
     end_time = omp_get_wtime();
     printf("Parallel Count Sort Time: %f seconds\n", end_time - start_time);
-
+    
     // free arrays
     free(a_serial);
     free(a_parallel);
     
     return 0;
 }
+
+
+/* 
+a)
+a[] and temp[] should be shared otherwise the count, and i and j should the private
+if you look at count_sort_parallel you can see the implementation
+
+b)
+no there is no loop carried dependency, there is a race condition with temp[] since it's shared multiple threads my write to the same location
+
+*/
+
+
+//Serial Count Sort Time: 0.290000 seconds
+//Parallel Count Sort Time: 0.056000 seconds
