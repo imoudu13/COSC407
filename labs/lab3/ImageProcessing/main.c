@@ -32,6 +32,7 @@ int main() {
 
 		printf("number of threads: %d\n", thread_id);
         /* Manually divide work */
+        #pragma omp parallel for
         for (UINT x = thread_id; x < width; x += num_threads) {
             for (UINT y = 0; y < height; ++y) {
                 BMP_GetPixelRGB(bmp, x, y, &r, &g, &b);
