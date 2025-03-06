@@ -2,7 +2,6 @@
 #include <stdlib.h>
 
 void printNums(double *a, int n) {
-  //print first and last 5 elements
 	int x = 5;
 	for (int i = 0; i < x; i++)
 		printf("a[%d]: %.7f \n", i, a[i]);
