@@ -2,17 +2,16 @@
 
 __global__ void printElements(double *arr, int size) {
     int idx = threadIdx.x + blockIdx.x * blockDim.x;
-    if (idx < size && (idx < 5 || idx >= size - 5)) { // First 5 or last 5 elements
+    if (idx < size && (idx < 5 || idx >= size - 5)) {
         printf("Element at index %d: %.7f\n", idx, arr[idx]);
     }
 }
 
 int main() {
-    const int n = 10000000; // 10 million
+    const int n = 10000000;
     double *h_arr = new double[n];
     double *d_arr;
 
-    // Initialize array with values
     for (int i = 0; i < n ; i++) {
         h_arr[i] = (double)i / n;
     }
