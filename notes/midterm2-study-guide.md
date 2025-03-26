@@ -1,11 +1,6 @@
 # COSC 407 Midterm Study Guide
 
----
-
 ## Topic 11 – Speed and Efficiency
-
-### Overview
-This topic introduces key performance metrics in parallel computing: **speedup**, **efficiency**, and how they are affected by factors such as **parallelism**, **overhead**, and **problem size**. It also covers two important theoretical models: **Amdahl's Law** and **Gustafson's Law**.
 
 ---
 
@@ -23,19 +18,10 @@ This topic introduces key performance metrics in parallel computing: **speedup**
 ### Instruction-Level Metrics
 
 - **IPS (Instructions Per Second):** Approximate speed of CPU execution.
-- **MIPS / MFLOPS / GFLOPS:** Measure specific types of operations (especially useful in scientific computing).
 - **CPI (Cycles Per Instruction):**
   ```math
   CPU Time = (CPI × Instruction Count) / Clock Rate
   ```
-
----
-
-### Benchmarks
-
-- Standardized programs used to evaluate performance.
-- **SPEC** benchmark suite: widely used, realistic workloads.
-- Website: [http://www.spec.org](http://www.spec.org)
 
 ---
 
