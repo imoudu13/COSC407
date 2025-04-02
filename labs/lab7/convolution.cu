@@ -8,6 +8,16 @@
 #define MAX(x,y) (  (x) ^ (((x) ^ (y)) & -((x) < (y))) )
 
 //****************************************************************************************************************
+// PARALLEL FUNCTIONS
+//****************************************************************************************************************
+	/*
+	TODO: 	Provide CUDA implementation for parallelizing the two SERIAL functions: convolution_8bits and convolution_32Bits
+			Make sure to check for errors from CUDA API calls and from Kernel Launch.
+			Also, time your parallel code and compute the speed-up.
+	*/
+
+
+//****************************************************************************************************************
 // SERIAL FUNCTIONS
 //****************************************************************************************************************
 
@@ -198,7 +208,10 @@ void serial(){
 	printf("Output image saved.\nProgram finished!\n");
 }
 
-// parallel functions
+
+// PARALLEL PORTION
+
+// this function does the error checking
 #define CUDA_CHECK(call) \
 do { \
     cudaError_t _err = call; \
@@ -211,9 +224,16 @@ do { \
 __global__ void convolution_8bits_kernel(const unsigned char* d_in, unsigned char* d_out, int height, int width, const float* d_filter, int filter_width) {
     int col = blockIdx.x * blockDim.x + threadIdx.x;
     int row = blockIdx.y * blockDim.y + threadIdx.y;
-    if (col >= width || row >= height) return;
+
+	// make sure it stays within bounds
+    if (col >= width || row >= height) {
+		return;
+	}
+
     int half = filter_width / 2;
     float sum = 0.0f;
+
+	// apply the filter to every pixel just like serial
     for (int row_f = -half; row_f <= half; ++row_f) {
         for (int col_f = -half; col_f <= half; ++col_f) {
             int r = MIN(MAX(row + row_f, 0), height - 1);
@@ -232,37 +252,56 @@ void convolution_8bits_parallel(const unsigned char* image_in, unsigned char* im
     float* d_filter = nullptr;
     size_t img_size = width * height * sizeof(unsigned char);
     size_t filter_size = filter_width * filter_width * sizeof(float);
+
+	// allocate memory on the gpu for the above variables
     CUDA_CHECK(cudaMalloc(&d_in, img_size));
     CUDA_CHECK(cudaMalloc(&d_out, img_size));
     CUDA_CHECK(cudaMalloc(&d_filter, filter_size));
-    CUDA_CHECK(cudaMemcpy(d_in, image_in, img_size, cudaMemcpyHostToDevice));
+    
+	// copy the memory to the gpu
+	CUDA_CHECK(cudaMemcpy(d_in, image_in, img_size, cudaMemcpyHostToDevice));
     CUDA_CHECK(cudaMemcpy(d_filter, filter, filter_size, cudaMemcpyHostToDevice));
-    dim3 block(16, 16);
+    
+	// create the grid
+	dim3 block(16, 16);
     dim3 grid((width + block.x - 1) / block.x, (height + block.y - 1) / block.y);
-    convolution_8bits_kernel<<<grid, block>>>(d_in, d_out, height, width, d_filter, filter_width);
-    cudaError_t err = cudaGetLastError();
+    
+	// launching the kernel
+	convolution_8bits_kernel<<<grid, block>>>(d_in, d_out, height, width, d_filter, filter_width);
+    
+	// cathc any errors
+	cudaError_t err = cudaGetLastError();
     if (err != cudaSuccess) {
         fprintf(stderr, "Kernel launch error: %s\n", cudaGetErrorString(err));
         exit(1);
     }
+
+	// sync
     CUDA_CHECK(cudaDeviceSynchronize());
-    CUDA_CHECK(cudaMemcpy(image_out, d_out, img_size, cudaMemcpyDeviceToHost));
-    CUDA_CHECK(cudaFree(d_in));
+    
+	// copy memory back to cpu
+	CUDA_CHECK(cudaMemcpy(image_out, d_out, img_size, cudaMemcpyDeviceToHost));
+    
+	// free memory on the gpu
+	CUDA_CHECK(cudaFree(d_in));
     CUDA_CHECK(cudaFree(d_out));
     CUDA_CHECK(cudaFree(d_filter));
 }
 
+// this function is the same as the serial except at the end deallocated memory that was created for the R, G, B, and A arrays
 void convolution_32bits_parallel(const uchar4* image_in, uchar4* image_out, int height, int width, const float* filter, int filter_width) {
     unsigned char *R_in = new unsigned char[width * height];
     unsigned char *G_in = new unsigned char[width * height];
     unsigned char *B_in = new unsigned char[width * height];
     unsigned char *A_in = new unsigned char[width * height];
+
     for (int i = 0; i < width * height; ++i) {
         R_in[i] = image_in[i].x;
         G_in[i] = image_in[i].y;
         B_in[i] = image_in[i].z;
         A_in[i] = image_in[i].w;
     }
+
     unsigned char *R_out = new unsigned char[width * height];
     unsigned char *G_out = new unsigned char[width * height];
     unsigned char *B_out = new unsigned char[width * height];
@@ -271,9 +310,12 @@ void convolution_32bits_parallel(const uchar4* image_in, uchar4* image_out, int 
     convolution_8bits_parallel(G_in, G_out, height, width, filter, filter_width);
     convolution_8bits_parallel(B_in, B_out, height, width, filter, filter_width);
     convolution_8bits_parallel(A_in, A_out, height, width, filter, filter_width);
+
     for (int i = 0; i < width * height; ++i) {
         image_out[i] = make_uchar4(R_out[i], G_out[i], B_out[i], A_out[i]);
     }
+
+	// deallocate memory that was saved for arrays initially
     delete[] R_in;
     delete[] G_in;
     delete[] B_in;
@@ -311,5 +353,5 @@ void parallel() {
 int main(){
   checkForGPU();
 	serial();
-	//parallel();
+	parallel();
 }
