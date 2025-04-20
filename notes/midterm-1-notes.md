@@ -1,4 +1,3 @@
-
 # Parallel Concepts
 
 ## Concurrency
