@@ -114,11 +114,6 @@ A **race condition** occurs when the **parent process exits before its child thr
 return 0;
 ```
 
-### Fork Join
-OMP uses the fork join model. This enforces synchronization so every thread must wait till everyone is finished
-before proceeding to the next region. A group of threads executing the parallel block is known as a team, 
-the original thread is called the master, the children are called slaves
-
 ### Race Conditions
 A **race condition** occurs when multiple threads **simultaneously access and modify shared data**, leading to **unpredictable behavior**.
 
@@ -560,9 +555,8 @@ __device__ void unlock() {
 ```
 ### Coalesced Global Memory Access
 **Access pattern matters!**
-- Best: threads access contiguous memory
-- Avoid:
-    - Strided access, Random access, Misaligned blocks
+- Best: contiguous access pattern (stride 1)
+- Avoid: Strided access, Random access, Misaligned blocks
 ### Access Pattern Examples
 ```c
 x = A[i];            // Coalesced    x = A[2 * i];        // Strided
