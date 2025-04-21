@@ -1,4 +1,4 @@
-## Process
+### Process
 An instance of the computer that is being executed. These are its components:
 - Executable machine language program.
 - Block of memory.
@@ -6,12 +6,12 @@ An instance of the computer that is being executed. These are its components:
 - Security info.
 - Information about the state of the process.
 
-## Threading
+### Threading
 - They allow programmers to divide their programs into independent tasks.
 - A stream of instructions that can be scheduled to run independently of its main program.
 - The hope is that when one thread blocks because it is waiting for resources, the other can run.
 
-## Processes vs Threads
+### Processes vs Threads
 - Threads exist within a process; they’re like the children of the process.
 - A process has at least one thread.
 - If a process has more than one thread, it is multithreaded.
@@ -23,57 +23,39 @@ An instance of the computer that is being executed. These are its components:
 - Data stored in a process's memory can be **shared or private**:
     - If **private**, only the thread that owns it can use it.
 
-## How is Data Shared?
 ### Shared Memory
 - Allows processors to have access to a global address space.
 - Multiple processes can operate independently but share the same memory resources.
 - Changes in a memory location affected by one task are visible to others.
 
-### Uniform Memory Access (UMA)
+### Uniform Memory Access (UMA) vs Non-Uniform Memory Access (NUMA)
 - The time to access all memory locations is the same for all cores.
-
-### Non-Uniform Memory Access (NUMA)
 - A memory location a core is directly connected to can be accessed faster than a memory location that must be accessed through another chip.
 
-## Task Scheduling
+### Task Scheduling
 - A **scheduler** is a program that uses a **scheduling policy** to decide which process should run next.
-- It uses a **selection function** to make the decision.
-- The selection function considers:
-    - Resources the process requires.
-    - Time the process has been waiting.
-    - The process's priority.
+- It uses a selection function. The selection function considers:
+    - Resources the process requires. Time the process has been waiting. The process's priority.
 - Scheduling policy should try to optimize:
-    - **Responsiveness** of interactive processes.
-    - **Turnaround time** (the time the user waits for the process to finish).
-    - **Resource utilization**.
-    - **Fairness** (ensuring each process gets a chance to run).
+    - **Responsiveness** of interactive processes, **Turnaround time**, **Resource utilization**, **Fairness**
 
 ### Non-Preemptive Scheduling Policies
 - Each task runs to completion before the next one can run.
-- **First In First Out (FIFO)**.
-- **Shortest-Job-First (SJF)**.
+- **First In First Out (FIFO)**, **Shortest-Job-First (SJF)**.
 
 ### Preemptive Scheduling Policies
 - **Round-Robin**: Each task is assigned a fixed time before it is required to give way to the next task and move back to the queue.
-- **Earliest-Deadline-First**: The process with the closest deadline is picked next.
-- **Shortest Remaining Time First**: The process with the shortest remaining time is picked first.
+- **Earliest-Deadline-First**. **Shortest Remaining Time First**
 
-## Key Terms
+### Key Terms
 - **Shared resource**: A resource available to all processes in the concurrent program.
 - **Critical section**: Sections of code within a process that require access to shared resources. Cannot be executed while another process is in a corresponding section of code.
-- **Mutual exclusion**: Requirement that when one process is in a critical section accessing a shared resource, no other process may be in a critical section accessing any of those shared resources.
 - **Condition synchronization**: A mechanism ensuring that a process does not proceed until a certain condition is satisfied.
-- **Deadlock**: A situation where two or more processes are unable to proceed because each is waiting for another process to act.
-- **Livelock**: A situation where two or more processes continuously change their state in response to changes in other processes without making any progress.
-- **Race Condition**: A situation where multiple tasks read/write a shared data item, and the result depends on the relative timing of their execution.
 - **Starvation**: A situation where a runnable process is overlooked indefinitely by the scheduler.
 
-## Dead or Alive(lock)
-Concurrent programs must satisfy two properties:
-1. **Safety**: The program doesn’t enter a bad state.
-2. **Liveness**: The program must progress.
-
-Two problems that can occur:
+### Dead or Alive(lock)
+Concurrent programs must be safe, meaning the program cannot enter a bad state, and alive meaning they have to make progress
+Two problems that can occur with concurrency:
 - **Deadlock**: A process is waiting for a shared resource that will never be available (e.g., another process is waiting for this process to act).
 - **Livelock**: Multiple processes continuously change state in response to each other without making progress.
 
@@ -87,33 +69,20 @@ For deadlock to occur, **four conditions must hold**:
 ### Preventing Deadlock
 To prevent deadlock, **prevent at least one of the four conditions** from occurring.
 
-# POSIX Threads
+### POSIX Threads
 A **POSIX thread** is a thread associated with a process’s shared resources. Each thread has its own:
-- **Stack**
-- **Program counter**
-- **Registers**
-- **Thread ID**
+**Stack**, **Program counter**, **Registers**, **Thread ID**
 
-## Races
+### Races
 A **race condition** occurs when the **parent process exits before its child threads complete**. This does not allow enough time for child threads to finish execution.
+- Best fix for race conditions: use mutual exclusions and join the threads
 
-## Fixes for Race Conditions
-- Best fix for race conditions, use mutual exclusions and join the threads
+### Task Parallelism vs. Data Parallelism
+- Task Parallelism shares the tasks among each core ie on core does the tasks on all data
+- Data parallelism shares the data among each core
 
-### Task Parallelism
-- Share the tasks among each core ie on core does the tasks on all data
-
-### Data parallelism
-- Share the data among each core
-
-## Fork Join
-OpenMP uses the fork join model. The enforces synchronization so every thread must wait till everyone is finished <br>
-before proceeding to the next region
-A group of threads executing the parallel block is known as a team, the original thread is called the master, <br>
-the children are called slaves
-
-### Task parallelism
 ```c
+// Task Parallelism
 #pragma omp parallel num_threads(4)
 { 
   int id = omp_get_thread_num();
@@ -130,11 +99,7 @@ the children are called slaves
     printf("T2:special task\n");
 }
 
-printf("End");
-```
-
-### Data Parallelism
-```C
+// Data Parallelism
 #pragma omp parallel num_threads(2)
 {
   int id = get_thread_num()
@@ -146,16 +111,17 @@ printf("End");
   for (int index = my_a; index < my_b; index++) 
     printf("do work\n");
 }
-
-printf("done\n");
-
 return 0;
 ```
 
-## Race Conditions
+### Fork Join
+OMP uses the fork join model. This enforces synchronization so every thread must wait till everyone is finished
+before proceeding to the next region. A group of threads executing the parallel block is known as a team, 
+the original thread is called the master, the children are called slaves
+
+### Race Conditions
 A **race condition** occurs when multiple threads **simultaneously access and modify shared data**, leading to **unpredictable behavior**.
 
-### Example:
 ```c
 #pragma omp parallel
 {
@@ -164,14 +130,12 @@ A **race condition** occurs when multiple threads **simultaneously access and mo
 ```
 To prevent this, we use **mutual exclusion** techniques.
 
-## Barriers
+### Barriers
 **Barriers** ensure that all threads reach a synchronization point before continuing execution.
 
 ### Types of Barriers:
-1. **Implicit Barriers** - Automatically added at the end of parallel regions.
-2. **Explicit Barriers** - Defined using `#pragma omp barrier`.
+**Implicit Barriers** - Automatically added at the end of parallel regions. **Explicit Barriers** - Defined using `#pragma omp barrier`.
 
-### Example:
 ```c
 #pragma omp parallel
 {
@@ -185,7 +149,7 @@ To prevent this, we use **mutual exclusion** techniques.
 - All threads must encounter the barrier.
 - Conditional execution may lead to **illegal barriers**.
 
-## `nowait` Clause
+### `nowait` Clause
 Using `nowait` allows threads **to skip synchronization** when it is unnecessary, improving performance.
 
 ```c
@@ -196,45 +160,32 @@ Using `nowait` allows threads **to skip synchronization** when it is unnecessary
 // Other threads continue execution without waiting.
 ```
 
-## Mutual Exclusion
-**Mutual exclusion** ensures that only **one thread at a time** accesses a critical section.
-
 ### OpenMP Mutual Exclusion Mechanisms:
 1. **Critical Directive** - Ensures exclusive execution.
 2. **Atomic Directive** - Ensures atomic updates to a shared variable.
 3. **Locks** - Explicit locking mechanisms.
 
-### 1. Critical Directive
+### Mutual exclusions
+**Mutual exclusion** ensures that only **one thread at a time** accesses a critical section.
 ```c
+// critical: protects critical section, kinda slow, especially if overused
+// Allows **simultaneous execution** of **different** critical sections.
 #pragma omp critical
 {
     shared_var += local_val;
 }
-```
-**Named Critical Sections:**
-```c
+// Named Critical Sections
 #pragma omp critical(name1)
 x = compute_x();
 #pragma omp critical(name2)
 y = compute_y();
-```
-- Allows **simultaneous execution** of **different** critical sections.
 
-### 2. Atomic Directive
-`#pragma omp atomic` is **faster** than `critical` for **simple updates**.
-
-```c
+// atomic
+// only supports simple operations `x++`, `x--`, `x += expr`, `x = x + expr`
 #pragma omp atomic
 sum += value;
-```
 
-Supported Operations:
-- `x++`, `x--`, `x += expr`, `x = x + expr`
-
-### 3. Locks
-Locks **manually enforce** mutual exclusion.
-
-```c
+// locking
 #include <omp.h>
 static omp_lock_t mylock;
 
@@ -258,13 +209,12 @@ int main() {
 - `omp_unset_lock(&lock);`
 - `omp_destroy_lock(&lock);`
 
-## When to Use Which?
+### When to Use Which?
 **Atomic**, Single-variable updates (fastest). **Critical**, Protects complex code sections. **Locks**, Fine-grained control over execution.<br>
 **Avoid Mixing** different mutual exclusion methods. **Fairness is NOT guaranteed** - Some threads may starve. **Avoid Nesting** critical sections (deadlocks possible).
 
 ### Shared Variables
 - Exist in **one memory location**, accessible by all threads.
-- Default behavior for variables declared **before** the parallel block.
 
 ```c
 int x = 5;
@@ -272,19 +222,11 @@ int x = 5;
 {
     // All threads access the same x
 }
-```
-
-### Private Variables
-```c
 int y = 5;
 #pragma omp parallel private(y)
 {
     // Each thread gets its own y (uninitialized)
 }
-```
-
-### First Private Variables
-```c
 int z = 5;
 #pragma omp parallel firstprivate(z)
 {
@@ -306,39 +248,32 @@ int x = 0, y = 0;
 }
 ```
 
-## Reductions
+### Reductions
 **Reduction** operations allow threads to **aggregate results** safely without manual synchronization.
 
-### Syntax
+### Reduction Examples
 ```c
+// syntax
 #pragma omp parallel reduction(<operator> : <variable list>)
-```
-
-### Example 1: Summing Across Threads
-```c
 int sum = 0;
 #pragma omp parallel reduction(+:sum)
 {
     sum += omp_get_thread_num();
 }
-printf("Total sum = %d", sum);
-```
 
-### Example 2: Multiple Variables
-```c
+// Multiple Variables
 int x = 10, y = 10;
 #pragma omp parallel reduction(+:x, y)
 {
     x = omp_get_thread_num();
     y = 5;
 }
-printf("Shared: x=%d, y=%d\n", x, y);
 ```
 
 ### Reduction Operations
-`+` Summation. `*` Multiplication. `&` Bitwise AND. `|` Bitwise OR. `^` Bitwise XOR. `&&` Logical AND. `||` Logical OR
+`+` Summation. `*` Multiplication. `&` Bitwise AND. `|` Bitwise OR. `^` Bitwise XOR. `&&` Logical AND. `||` Logical OR. max/min
 
-## Parallel Summation with Reduction
+### Parallel Summation with Reduction
 Instead of using a **critical section**, reductions optimize aggregation.
 
 ```c
@@ -349,7 +284,7 @@ double global_sum = 0;
 }
 ```
 
-## Area Under a Curve (Trapezoidal Rule)
+### Area Under a Curve (Trapezoidal Rule)
 Using **reduction** to integrate a function:
 
 ```c
@@ -361,7 +296,7 @@ double global_result = 0.0;
 printf("Approximate area: %f\n", global_result);
 ```
 
-## **1. Work-Sharing Constructs**
+### **Work-Sharing Constructs**
 - Used to distribute work among threads inside a parallel region.
 - **Types:**
     - `for` – Divides loop iterations across threads.
@@ -369,7 +304,7 @@ printf("Approximate area: %f\n", global_result);
     - `sections` – Splits tasks into sections executed by different threads.
 - There is an **implied barrier** at the exit unless `nowait` is specified.
 
-## **2. Parallel For**
+### **Parallel For**
 - Loop iterations are divided across threads dynamically.
 - The loop variable is **private** by default.
 - The execution order is **non-deterministic**.
@@ -388,7 +323,7 @@ printf("Approximate area: %f\n", global_result);
    }
    ```
 
-## **3. Data Dependency & Loop-Carried Dependencies**
+### **Data Dependency & Loop-Carried Dependencies**
 - Parallel loops should avoid **loop-carried dependencies** (when one iteration depends on results from another).
   ```c
   fibo[0] = fibo[1] = 1;
@@ -397,7 +332,7 @@ printf("Approximate area: %f\n", global_result);
       fibo[i] = fibo[i-1] + fibo[i-2];
   ```
 
-## **4. Reduction in Parallel Loops**
+### **Reduction in Parallel Loops**
 - Reduction avoids data races when accumulating results.
 - **Example: Summing values in an array**
   ```c
@@ -407,7 +342,7 @@ printf("Approximate area: %f\n", global_result);
       sum += array[i];
   ```
 
-## **5. Assigning Work to a Single Thread**
+### **Assigning Work to a Single Thread**
 - Use `#pragma omp single` for operations that should only be done once.
   ```c
   #pragma omp parallel
@@ -419,7 +354,7 @@ printf("Approximate area: %f\n", global_result);
   ```
   *Only one thread will execute the `single` block.*
 
-## **1. Parallel Sections**
+### **Parallel Sections**
 - `#pragma omp sections` allows different sections of code to be executed by different threads.
   ```c
   #pragma omp parallel sections
@@ -436,7 +371,7 @@ printf("Approximate area: %f\n", global_result);
   ```
 - There is an **implicit barrier** at the end of the sections unless `nowait` is used.
 
-## **Loop Scheduling**
+### **Loop Scheduling**
 - The `schedule` clause determines how loop iterations are assigned to threads.
 - `static`, Equal chunks assigned at compile time. `dynamic`, Threads take chunks dynamically. `guided`, Starts with large chunks, then reduces. `auto`, Compiler decides the best method.
   ```c
@@ -445,7 +380,7 @@ printf("Approximate area: %f\n", global_result);
       printf("T%d: %d\n", omp_get_thread_num(), i);
   ```
   
-## **Ordered Iterations**
+### **Ordered Iterations**
 - Ensures that iterations follow a strict order when needed.
   ```c
   #pragma omp for ordered schedule(dynamic)
@@ -456,7 +391,7 @@ printf("Approximate area: %f\n", global_result);
   }
   ```
 
-## **Parallel Matrix Multiplication**
+### **Parallel Matrix Multiplication**
 ```c
 #pragma omp parallel for collapse(2)
 for (i = 0; i < N; i++)
@@ -467,7 +402,7 @@ for (i = 0; i < N; i++)
     }
 ```
 
-## **2. Finding the Maximum Value**
+### **Finding the Maximum Value**
 ```c
 int max_parallel(int *arr){
     int i, m = arr[0];
@@ -479,7 +414,7 @@ int max_parallel(int *arr){
 }
 ```
 
-## **3. Producer-Consumer Model**
+### **Producer-Consumer Model**
 ```c
 void produce() {
     while (i < NUM_ITEMS) {
@@ -503,108 +438,11 @@ void consume() {
 ```
 *Ensures only one thread modifies shared data at a time.*
 
-# Code Snippets
-
-```c
-pthread_mutex_t lock;
-void* say_something(void *ptr) {
-    pthread_mutex_lock(&lock);
-    printf("%s ", (char*)ptr);
-    pthread_mutex_unlock(&lock);
-    pthread_exit(0);
-}
-int main() {
-    pthread_t t1, t2;
-    char *msg1 = "Hello ", *msg2 = "World!";
-    pthread_mutex_init(&lock, NULL);
-    pthread_create(&t1, NULL, say_something, msg1);
-    pthread_create(&t2, NULL, say_something, msg2);
-    pthread_join(t1, NULL);
-    pthread_join(t2, NULL);
-    printf("Done!");
-    pthread_mutex_destroy(&lock);
-    exit(0);
-}
-```
-**Mutex synchronization for thread safety.**
-
-```c
-#pragma omp parallel num_threads(4)
-{ 
-  int id = omp_get_thread_num();
-  printf("T%d:A\nT%d:B\n", id, id);
-  if (id == 0) printf("T0:special task\n");
-  if (id == 1) printf("T1:special task\n");
-  if (id == 2) printf("T2:special task\n");
-}
-printf("End");
-```
-**Task parallelism in OpenMP.**
-
-```c
-#pragma omp parallel num_threads(2)
-{
-  int id = omp_get_thread_num();
-  int my_a = id * 3, my_b = id * 3 + 3;
-  printf("T%d will process indexes %d to %d\n", id, my_a, my_b);
-  for (int index = my_a; index < my_b; index++) printf("do work\n");
-}
-printf("done\n");
-```
-**Data parallelism using OpenMP.**
-
-```c
-#pragma omp parallel
-{
-    global_sum += my_sum;
-}
-```
-**Race condition due to unsynchronized access.**
-
-```c
-#pragma omp atomic
-sum += value;
-```
-**Atomic directive ensures safe updates.**
-
-```c
-#pragma omp critical
-{
-    shared_var += local_val;
-}
-```
-**Critical section to prevent concurrent access.**
-
-```c
-#pragma omp parallel for reduction(+:sum)
-for (int i = 0; i < n; i++)
-    sum += array[i];
-```
-**Reduction safely aggregates results.**
-
-```c
-#pragma omp parallel for collapse(2)
-for (int i = 0; i < N; i++)
-    for (int j = 0; j < N; j++) {
-        C[i][j] = 0;
-        for (int k = 0; k < N; k++)
-            C[i][j] += A[i][k] * B[k][j];
-    }
-```
-**Parallel matrix multiplication using OpenMP.**
-
-```c
-#pragma omp parallel for schedule(dynamic,2)
-for (int i = 0; i<8; i++)
-    printf("T%d: %d\n", omp_get_thread_num(), i);
-```
-**Dynamic scheduling distributes workload efficiently.**
-
 ### Performance Metrics
-- **Response Time** The time taking to complete one task
-- **Throughput** is the number of task completed per unit of time
+- **Response Time** The time taken to complete one task
+- **Throughput** is the number of tasks completed per unit of time
 - **CPU Time breakdown**
-    - User time: Time the CPU spends running the users code, System time: Time CPU spent running the OS's code, Wait time: Time spent waiting for I/O or other services
+    - User time: Time the CPU spends running the user's code, System time: Time CPU spent running the OS's code, Wait time: Time spent waiting for I/O or other services
 ### Instruction-Level Metrics
 - **IPS (Instructions Per Second):** Approximate speed of CPU execution.
 - **CPI (Cycles Per Instruction):** CPU Time = (CPI × Instruction Count) / Clock Rate
@@ -627,7 +465,7 @@ S = 1 / ((1 - r) + r) // as p approaches infinity
 ### Gustafson's law
 This formula is for scalable/large problem sizes. If 'r' or the parallelizable portion is 100% then S = P
 **Strong scalability**  if E remains constant as p increases (that means the problem size is fixed). **Weak scalability** if E remains constant as both p and problem size increase.
-## CUDA
+### CUDA
 **Latency** is the time taken to complete one task. **Throughput** is the number of tasks completed per unit of time.
 ### CPU vs. GPU Architecture
 (Feature, CPU, GPU), (Control logic, Complex, Simple), (Threads, Few, Thousand), (Memory bandwidth, Lower, higher), (Latency, Optimized, Higher), (User Case, Serial Work, Parallel Work)
@@ -642,20 +480,7 @@ GPU uses SIMD (single instruction multiple data). That's why GPU's are optimized
 - Threads are organized into 1D/2D/3D blocks.
 - Blocks are organized into 1D/2D/3D grids.
 - Each thread/block has its own ID:
-  ```c
-  threadIdx.x, threadIdx.y, threadIdx.z
-  blockIdx.x, blockIdx.y, blockIdx.z
-  ```
 - **Dimension Variables:**
-  ```c
-  blockDim.x, gridDim.y, etc.
-  ```
-```c
-__global__ void vec_add(float *A, float *B, float* C, int N) {
-    int i = threadIdx.x;
-    if (i < N) C[i] = A[i] + B[i];
-}
-```
 ### Launch Configuration
 - To compute total threads and blocks:
   ```c
@@ -680,7 +505,6 @@ __global__ void vec_add(float *A, float *B, float* C, int N) {
       // safe access
   }
   ```
-### Thread Scheduling & Warps
 ### Matrix Multiplication: One Block
 - Threads in a **single block** compute a matrix `P = M × N`
 - Each thread computes one element in result `P`.
@@ -697,32 +521,13 @@ __global__ void MatrixMulKernel(float* d_M, float* d_N, float* d_P, int width) {
     }
 }
 ```
-### Matrix Multiplication: Multiple Blocks
-- Break the work into **tiles** and assign to multiple blocks.
-- Each block handles a **TILE_WIDTH × TILE_WIDTH** chunk.
-- Coordinates use both `blockIdx` and `threadIdx`.
-```c
-int r = blockIdx.y * TILE_WIDTH + threadIdx.y;
-int c = blockIdx.x * TILE_WIDTH + threadIdx.x;
-```
 - Threads perform computation on shared data.
-### Execution Configuration
-```c
-dim3 blockSize(TILE_WIDTH, TILE_WIDTH);
-dim3 gridSize((width+TILE_WIDTH-1)/TILE_WIDTH, (height+TILE_WIDTH-1)/TILE_WIDTH);
-MatrixMul<<<gridSize, blockSize>>>(...);
-```
 ### Memory Types in CUDA
 (Type, Scope, Speed, Notes), (**Registers**, Thread, Very Fast, Private), (**Shared**, Block, Fast, Shared across threads in a block), (**Global**, All grids, Slow, Accessible by all threads), (**Constant**, All grids, Fast (cached), Read-only, limited size (64 KB)), (**Local**, Thread, Slow, (cached), Used when registers spill)
-### APOD Framework
-**A**ssess identify performance bottlenecks, **P**arallelize decide what can be parallelized (Amdahl’s/Gustafson’s), **O**ptimize Improve memory usage, instruction performance, **D**eploy Measure and compare performance
 ### Memory Optimization Guidelines
-1. **Minimize Host-Device Transfers**
-- Batch small transfers, Keep intermediate structures on the device
-2. **Use Fast Memory Types:**
-- (Register, Thread), (Shared, Fast), (Constant, Grid), (Global, Slow), (Local, Slow)
-3. **Reduce Global Memory Traffic:**
-- Use **tiling**: load data into shared memory, compute, write back, Coalesced access patterns
+1. **Minimize Host-Device Transfers:** Batch small transfers, Keep intermediate structures on the device
+2. **Use Fast Memory Types:** (Register, Thread), (Shared, Fast), (Constant, Grid), (Global, Slow), (Local, Slow)
+3. **Reduce Global Memory Traffic:** Use **tiling**: load data into shared memory, compute, write back, Coalesced access patterns
 ### Tiling and Shared Memory Example
 ```c
 __shared__ float shrArr[128];
@@ -732,7 +537,6 @@ __syncthreads();
 // process shrArr[idx]
 ```
 ### Synchronization Example Fix
-Problem:
 ```c
 array[i] = array[i-1]; // data race!
 //fix: 
@@ -761,19 +565,8 @@ __device__ void unlock() {
     - Strided access, Random access, Misaligned blocks
 ### Access Pattern Examples
 ```c
-x = A[i];            // Coalesced
-x = A[2 * i];        // Strided
-x = A[128 - i];      // Strided
-A[A[i]] = 7;         // Random
-```
-### Reduction Pattern (Summing an Array)
-Naive:
-```c
-for (int stride = 1; stride < blockDim.x; stride *= 2)
-  if (i % (2 * stride) == 0) partialSum[i] += partialSum[i + stride];
-// improved
-for (int stride = blockDim.x / 2; stride > 0; stride /= 2)
-  if (i < stride) partialSum[i] += partialSum[i + stride];
+x = A[i];            // Coalesced    x = A[2 * i];        // Strided
+x = A[128 - i];      // Strided      A[A[i]] = 7;         // Random
 ```
 ### Memory Location Summary
 (type, memory, lifetime, speed), (int x, Register, Thread, Very fast), (int arr[10], Local, Thread, Slow), (__shared__, Shared, Block, Fast), (__device__, Global, Application, Slow), (__constant__, Constant, Application, Fast (cached))
@@ -782,92 +575,14 @@ for (int stride = blockDim.x / 2; stride > 0; stride /= 2)
 - L2: Shared across GPU, coherent
 - Reads use both caches; writes go through L2 only
 ### Constant Memory
-- Limited (64 KB), cached, read-only from device
-- Great for parameters or lookup tables
+Limited (64 KB), cached, read-only from device, Great for parameters or lookup tables
 ### Local Memory
-- Private to thread
-- Physically located in global memory (but cached)
-- Used when registers are insufficient
+Private to thread, Physically located in global memory (but cached), Used when registers are insufficient
 
 ### Distributed Memory Programming
-
-- **Two memory models**:
-    - Shared memory (e.g., OpenMP on CPU, CUDA on GPU)
-    - Distributed memory (e.g., MPI on clusters)
+CUDA, and OpenMP are for shared memory parallel programming. MPI is for distributed memory programming
 - **MPI (Message Passing Interface)**: Standard for writing programs that run on multiple machines.
     - Faster than Spark but Spark is better for data management.
-
-### Basics of MPI
-
-- **SPMD** (Single Program Multiple Data): All nodes run the same program and behave differently based on `rank`.
-- **Communicator**: Group of processes that can communicate.
-- Each process has:
-    - Unique rank
-    - Independent memory
-    - Access to `MPI_COMM_WORLD`
-
-### Communication Types
-
-- **Point-to-Point**: `MPI_Send`, `MPI_Recv`
-- **Collective**: Involves multiple processes
-
-### Blocking vs Non-blocking
-
-- **Blocking**: Function returns only when communication is complete (`MPI_Send`, `MPI_Recv`)
-- **Non-blocking**: Returns immediately (`MPI_Isend`, `MPI_Irecv`)
-
-### MPI Program Structure
-
-```c
-#include <mpi.h>
-int main(int argc, char *argv[]) {
-    MPI_Init(&argc, &argv);
-    // Communicator setup
-    MPI_Finalize();
-    return 0;
-}
-```
-
-### Basic MPI Functions
-
-- `MPI_Init`, `MPI_Finalize`
-- `MPI_Comm_rank`, `MPI_Comm_size`
-- `MPI_Send`, `MPI_Recv`
-- MPI constants: `MPI_INT`, `MPI_FLOAT`, `MPI_DOUBLE`, etc.
-
-### Example: Hello World
-
-```c
-int my_rank, comm_sz;
-MPI_Init(&argc, &argv);
-MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
-MPI_Comm_size(MPI_COMM_WORLD, &comm_sz);
-printf("Greetings from process %d of %d
-", my_rank, comm_sz);
-MPI_Finalize();
-```
-
-### Example: Point-to-Point Messaging
-
-```c
-if (my_rank != 0) {
-    sprintf(msg, "Greetings from process %d of %d!", my_rank, comm_sz);
-    MPI_Send(msg, LEN, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
-} else {
-    printf("Hi from process 0 of %d!
-", comm_sz);
-    for (int q = 1; q < comm_sz; q++) {
-        MPI_Recv(msg, LEN, MPI_CHAR, q, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        printf("%s
-", msg);
-    }
-}
-```
-
-### Wildcards
-
-- `MPI_ANY_SOURCE`, `MPI_ANY_TAG` useful in receivers
-- Senders must specify target
 
 ### Parallel Trapezoidal Rule
 
@@ -883,68 +598,6 @@ else {
         total_sum += my_sum;
     }
 }
-```
-
-## Topic 18: MPI Collective Communication
-
-### Collective Communication Types
-
-- **Reduction**:
-    - `MPI_Reduce`: All to one
-    - `MPI_Allreduce`: All to all
-- **Broadcast**:
-    - `MPI_Bcast`: One to all
-- **Scattering**:
-    - `MPI_Scatter`: One to many (chunks of data)
-- **Gathering**:
-    - `MPI_Gather`: Many to one
-    - `MPI_Allgather`: Many to all
-
-### MPI_Reduce
-
-```c
-MPI_Reduce(&my_sum, &total_sum, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-```
-
-### MPI_Allreduce
-
-```c
-MPI_Allreduce(&my_sum, &total_sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-```
-
-### MPI_Bcast
-
-```c
-MPI_Bcast(a_p, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-```
-
-### MPI_Scatter
-
-```c
-MPI_Scatter(src, 100, MPI_INT, dst, 100, MPI_INT, 0, MPI_COMM_WORLD);
-```
-
-### MPI_Gather
-
-```c
-MPI_Gather(s, 100, MPI_INT, dst, 100, MPI_INT, 0, MPI_COMM_WORLD);
-```
-
-### MPI_Allgather
-
-```c
-MPI_Allgather(s, 100, MPI_INT, dst, 100, MPI_INT, MPI_COMM_WORLD);
-```
-
-### Broadcasted Input
-
-```c
-if (my_rank == 0) {
-    scanf("%lf %lf %d", a_p, b_p, n_p);
-}
-MPI_Bcast(a_p, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-MPI_Bcast(b_p, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-MPI_Bcast(n_p, 1, MPI_INT, 0, MPI_COMM_WORLD);
 ```
 
 ```c
