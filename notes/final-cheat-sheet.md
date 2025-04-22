@@ -1,15 +1,9 @@
 ### Process
-An instance of the computer that is being executed. These are its components:
-- Executable machine language program.
-- Block of memory.
-- Descriptor of the OS resources allocated to it.
-- Security info.
-- Information about the state of the process.
+An instance of the computer that is being executed. These are its components:  
+Executable machine language program. Block of memory. Descriptor of the OS resources allocated to it. Security info. Information about the state of the process.  
 
-### Threading
-- They allow programmers to divide their programs into independent tasks.
-- A stream of instructions that can be scheduled to run independently of its main program.
-- The hope is that when one thread blocks because it is waiting for resources, the other can run.
+### Threads
+They allow programmers to divide their programs into independent tasks. A stream of instructions that can be scheduled to run independently of its main program. The hope is that when one thread blocks because it is waiting for resources, the other can run.
 
 ### Processes vs Threads
 - Threads exist within a process; they’re like the children of the process.
@@ -103,8 +97,8 @@ A **race condition** occurs when the **parent process exits before its child thr
 #pragma omp parallel num_threads(2)
 {
   int id = get_thread_num()
-  int my_a = id * 3;  \\ where you want the thread to start doing work
-  int my_b = id * 3 + 3; \\ where it should stop doing work
+  int my_a = id * 3;  // where you want the thread to start doing work
+  int my_b = id * 3 + 3; // where it should stop doing work
   
   printf("T%d will process indexes %d to ");
   
@@ -205,7 +199,7 @@ int main() {
 - `omp_destroy_lock(&lock);`
 
 ### When to Use Which?
-**Atomic**, Single-variable updates (fastest). **Critical**, Protects complex code sections. **Locks**, Fine-grained control over execution.<br>
+**Atomic**, Single-variable updates (fastest). **Critical**, Protects complex code sections. **Locks**, Fine-grained control over execution.  
 **Avoid Mixing** different mutual exclusion methods. **Fairness is NOT guaranteed** - Some threads may starve. **Avoid Nesting** critical sections (deadlocks possible).
 
 ### Shared Variables
@@ -460,16 +454,15 @@ S = 1 / ((1 - r) + r) // as p approaches infinity
 ### Gustafson's law
 This formula is for scalable/large problem sizes. If 'r' or the parallelizable portion is 100% then S = P
 **Strong scalability**  if E remains constant as p increases (that means the problem size is fixed). **Weak scalability** if E remains constant as both p and problem size increase.
-### CUDA
-**Latency** is the time taken to complete one task. **Throughput** is the number of tasks completed per unit of time.
 ### CPU vs. GPU Architecture
 (Feature, CPU, GPU), (Control logic, Complex, Simple), (Threads, Few, Thousand), (Memory bandwidth, Lower, higher), (Latency, Optimized, Higher), (User Case, Serial Work, Parallel Work)
 GPU uses SIMD (single instruction multiple data). That's why GPU's are optimized for parallelism. Host is the CPU, Device is the GPU, Kernel is the function run on the device (executed in parallel by many threads). A grid is a collection of blocks, a block is a collection of threads
+**Latency** is the time taken to complete one task. **Throughput** is the number of tasks completed per unit of time.
 ### Function Qualifiers
 (Qualifier, Runs on, Callable from), (__global__, Device, Host), (__device__, Device, Device), (__host__, Host, Host), (__host__ __device__, Both, Both)
 ### cudaDeviceSynchronize()
 - CUDA and CPU code are asynchronous by default.
-- Use `cudaDeviceSynchronize()` to wait until all launched kernels finish.
+- Use `cudaDeviceSynchronize();` to wait until all launched kernels finish.
 - Useful for **timing kernel execution**.
 ### Thread Organization
 - Threads are organized into 1D/2D/3D blocks.
@@ -517,8 +510,16 @@ __global__ void MatrixMulKernel(float* d_M, float* d_N, float* d_P, int width) {
 }
 ```
 - Threads perform computation on shared data.
-### Memory Types in CUDA
-(Type, Scope, Speed, Notes), (**Registers**, Thread, Very Fast, Private), (**Shared**, Block, Fast, Shared across threads in a block), (**Global**, All grids, Slow, Accessible by all threads), (**Constant**, All grids, Fast (cached), Read-only, limited size (64 KB)), (**Local**, Thread, Slow, (cached), Used when registers spill)
+### Combined CUDA Memory Summary
+
+| Type           | Memory     | Scope       | Lifetime     | Speed         | Notes                                       |
+|----------------|------------|-------------|--------------|---------------|---------------------------------------------|
+| `int x`        | Register   | Thread      | Thread       | Very fast     | Private                                     |
+| `int arr[10]`  | Local      | Thread      | Thread       | Slow (cached) | Used when registers spill                   |
+| `__shared__`   | Shared     | Block       | Block        | Fast          | Shared across threads in a block            |
+| `__device__`   | Global     | All grids   | Application  | Slow          | Accessible by all threads                   |
+| `__constant__` | Constant   | All grids   | Application  | Fast (cached) | Read-only, limited size (64 KB)             |
+
 ### Memory Optimization Guidelines
 1. **Minimize Host-Device Transfers:** Batch small transfers, Keep intermediate structures on the device
 2. **Use Fast Memory Types:** (Register, Thread), (Shared, Fast), (Constant, Grid), (Global, Slow), (Local, Slow)
@@ -559,11 +560,10 @@ __device__ void unlock() {
 - Avoid: Strided access, Random access, Misaligned blocks
 ### Access Pattern Examples
 ```c
-x = A[i];            // Coalesced    x = A[2 * i];        // Strided
-x = A[128 - i];      // Strided      A[A[i]] = 7;         // Random
+x = A[i];   x = A[2 * i];        // Coalesced, Strided
+x = A[128 - i]; A[A[i]] = 7;     // Strided, Random
 ```
-### Memory Location Summary
-(type, memory, lifetime, speed), (int x, Register, Thread, Very fast), (int arr[10], Local, Thread, Slow), (__shared__, Shared, Block, Fast), (__device__, Global, Application, Slow), (__constant__, Constant, Application, Fast (cached))
+
 ### L1 and L2 Caches
 - L1: Per SM, fast but **not coherent**
 - L2: Shared across GPU, coherent
@@ -646,3 +646,223 @@ int main() {
     return 0;
 }
 ```
+
+### Parallel Programming Overview
+
+- **Shared Memory Systems**:
+  - Multiple cores on a chip share memory (e.g., CPUs with OpenMP).
+  - Multiple chips (e.g., GPUs using CUDA).
+
+- **Distributed Memory Systems**:
+  - No shared memory; connected over a network.
+  - Communicate via **messages** (MPI).
+
+### Distributed Memory Programming Models
+
+| Model   | Description                                                   |
+|---------|---------------------------------------------------------------|
+| Hadoop  | Uses HDFS and MapReduce. High fault tolerance, low performance. |
+| Spark   | Better performance than Hadoop. Similar concept.               |
+| MPI     | High-performance. Scales well. Suitable for most parallel code.|
+
+### MPI Concepts
+
+- **MPI** = Message Passing Interface.
+- **SPMD** = Single-Program Multiple-Data.
+- All nodes run the same program, but behavior depends on rank (e.g., `if (my_rank == 0)`).
+
+### MPI Program Structure (Boilerplate)
+
+```c
+#include <mpi.h>
+
+int main(int argc, char *argv[]) {
+    int my_rank, comm_sz;
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &comm_sz);
+    // work here
+    MPI_Finalize();
+    return 0;
+}
+```
+
+### Basic MPI Functions
+
+| Function           | Purpose                            |
+|--------------------|------------------------------------|
+| `MPI_Init`         | Initialize MPI                     |
+| `MPI_Finalize`     | Finalize MPI                       |
+| `MPI_Comm_size`    | Get number of processes            |
+| `MPI_Comm_rank`    | Get current process's rank         |
+| `MPI_Send`         | Send message (blocking)            |
+| `MPI_Recv`         | Receive message (blocking)         |
+| `MPI_Isend/Irecv`  | Non-blocking versions              |
+
+### MPI Data Types
+
+- Examples: `MPI_INT`, `MPI_FLOAT`, `MPI_DOUBLE`, `MPI_CHAR`, etc.
+
+### Point-to-Point Communication
+
+```c
+MPI_Send(msg, size, type, dest, tag, comm);
+MPI_Recv(msg, size, type, src, tag, comm, &status);
+```
+
+- Wildcards: `MPI_ANY_SOURCE`, `MPI_ANY_TAG`
+- Use `MPI_STATUS_IGNORE` if status not needed.
+
+### Wildcard Receives
+
+```c
+MPI_Recv(msg, size, type, MPI_ANY_SOURCE, MPI_ANY_TAG, comm, &status);
+```
+
+### Status Object
+
+```c
+MPI_Status status;
+status.MPI_SOURCE; // source ID
+status.MPI_TAG;    // message tag
+status.MPI_ERROR;  // error code
+MPI_Get_count(&status, type, &count);
+```
+
+### Serial vs Parallel Trapezoidal Rule
+
+#### Serial
+```c
+h = (b - a) / n;
+approx = (f(a) + f(b)) / 2.0;
+for (i = 1; i < n; i++) {
+    xi = a + i * h;
+    approx += f(xi);
+}
+```
+
+#### Parallel (Manual Reduction)
+Each process:
+- Computes its local interval and `my_sum`.
+- Sends to rank 0.
+- Rank 0 gathers and sums.
+
+### Communication Types
+
+| Type            | Description                            |
+|-----------------|----------------------------------------|
+| Point-to-point  | 1 sender, 1 receiver (`MPI_Send`, `MPI_Recv`) |
+| Collective      | Involves all processes in communicator |
+
+### Collective Operations Summary
+
+| Operation       | Description                      |
+|----------------|----------------------------------|
+| `MPI_Bcast`     | One to all (broadcast)           |
+| `MPI_Scatter`   | Split array among processes      |
+| `MPI_Gather`    | Combine chunks into array        |
+| `MPI_Allgather` | Like gather, but all receive     |
+| `MPI_Reduce`    | All to one reduction             |
+| `MPI_Allreduce` | All to all reduction             |
+
+### `MPI_Reduce`
+
+```c
+MPI_Reduce(&input, &output, count, datatype, op, dest, comm);
+```
+
+- Example: `MPI_SUM`, `MPI_MAX`, etc.
+- Output only valid on `dest` process.
+
+### `MPI_Allreduce`
+
+```c
+MPI_Allreduce(&input, &output, count, datatype, op, comm);
+```
+
+- All processes receive the result.
+
+### `MPI_Bcast`
+
+```c
+MPI_Bcast(&data, count, datatype, source, comm);
+```
+
+- All processes must participate.
+
+### `MPI_Scatter`
+
+```c
+MPI_Scatter(sendbuf, sendcount, sendtype,
+            recvbuf, recvcount, recvtype,
+            root, comm);
+```
+
+- Sends chunks to each process from root.
+
+### `MPI_Gather`
+
+```c
+MPI_Gather(sendbuf, sendcount, sendtype,
+           recvbuf, recvcount, recvtype,
+           root, comm);
+```
+
+- Opposite of scatter.
+
+### `MPI_Allgather`
+
+```c
+MPI_Allgather(sendbuf, sendcount, sendtype,
+              recvbuf, recvcount, recvtype,
+              comm);
+```
+
+- All processes get full combined result.
+
+### Collective vs Point-to-Point
+
+1. All processes must call the collective function.
+2. Arguments must be compatible.
+3. Output buffers must exist even on unused processes.
+4. No tags in collectives → order matters!
+
+### Efficiency Notes
+
+- MPI implementations optimize tree structures and internal reductions.
+- You should **prefer `MPI_Reduce`/`MPI_Allreduce`** over manual gathering when possible.
+
+### Tree-Structured Reduction (Manual)
+
+- Step-wise reductions from leaves to root.
+- More balanced but requires more code.
+
+### Comparison: Manual vs `MPI_Reduce`
+
+| Approach          | Pros                 | Cons                     |
+|-------------------|----------------------|--------------------------|
+| Manual Reduction  | Full control         | Complex, error-prone     |
+| `MPI_Reduce`      | Simple, optimized    | Less flexible            |
+
+### Broadcast Example
+
+```c
+if (rank == 0)
+    scanf(...); // root reads
+MPI_Bcast(...); // everyone receives
+```
+
+### Scatter + Gather Use Case
+
+1. Scatter chunks of data (e.g., subarrays).
+2. Each process works independently.
+3. Gather results back to one process.
+
+### Final Notes
+
+- MPI communication is **explicit** and **requires coordination**.
+- Always ensure every process makes matching collective calls.
+- Know when to use:
+  - `MPI_Send` / `MPI_Recv`
+  - `MPI_Bcast` / `MPI_Scatter`
+  - `MPI_Reduce` / `MPI_Allreduce`

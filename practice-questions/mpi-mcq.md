@@ -1,4 +1,3 @@
-```markdown
 ### MPI Practice Questions
 
 #### Multiple Choice Questions

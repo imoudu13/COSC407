@@ -1,4 +1,3 @@
-```markdown
 ### PART A: Multiple Choice Questions
 
 **Q1.**  
